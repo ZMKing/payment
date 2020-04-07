@@ -14,7 +14,7 @@
 
 老版本文档：http://helei112g.github.io/payment
 
-新版本文档如下
+新版本文档如下 (此版本兼容hyperf框架)
 
 
 ## Stargazers over time
@@ -527,7 +527,7 @@ transaction_id | 微信生成的订单号，在支付通知中有返回 | Y
 trade_no | 商户系统内部订单号，要求32个字符内，且在同一个商户号下唯一。transaction_id、trade_no二选一，如果同时存在优先级：transaction_id> trade_no | Y
 refund_no | 商户系统内部的退款单号，商户系统内部唯一 ，同一退款单号多次请求只退一笔。 | Y
 total_fee | 订单总金额，单位为元 | Y
-refund_fee | 退款总金额，订单总金额，单位为元 | Y 
+refund_fee | 退款总金额，订单总金额，单位为元 | Y
 refund_desc | 若商户传入，会在下发给用户的退款消息中体现退款原因 | N
 refund_account | 仅针对老资金流商户使用 | N
 

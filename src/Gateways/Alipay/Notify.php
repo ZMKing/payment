@@ -66,7 +66,10 @@ class Notify extends AliBaseObject
      */
     protected function getNotifyData()
     {
-        $data = empty($_POST) ? $_GET : $_POST;
+        // 此处兼容hyperf 框架
+        $request = \Hyperf\Utils\ApplicationContext::getContainer()->get(\Hyperf\HttpServer\Contract\RequestInterface::class);
+        $data = empty($request->post()) ? $request->query() : $request->post();
+
         if (empty($data) || !is_array($data)) {
             return [];
         }
