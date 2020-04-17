@@ -69,8 +69,11 @@ class Notify extends WechatBaseObject
 
     protected function getNotifyData()
     {
+        $request = \Hyperf\Utils\ApplicationContext::getContainer()->get(\Hyperf\HttpServer\Contract\RequestInterface::class);
+        $data = $request->getBody();
+
         // php://input 带来的内存压力更小
-        $data = @file_get_contents('php://input');// 等同于微信提供的：$GLOBALS['HTTP_RAW_POST_DATA']
+        //$data = @file_get_contents('php://input');// 等同于微信提供的：$GLOBALS['HTTP_RAW_POST_DATA']
         // 支付成功异步通知测试数据
 /*        $data = '
 <xml>

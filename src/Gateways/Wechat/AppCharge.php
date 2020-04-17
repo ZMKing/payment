@@ -11,9 +11,12 @@
 
 namespace Payment\Gateways\Wechat;
 
+use Hyperf\Utils\Str;
 use Payment\Contracts\IGatewayRequest;
 use Payment\Exceptions\GatewayException;
 use Payment\Payment;
+use Payment\Helpers\ArrayUtil;
+use Payment\Helpers\StrUtil;
 
 /**
  * @package Payment\Gateways\Wechat
@@ -29,17 +32,48 @@ class AppCharge extends WechatBaseObject implements IGatewayRequest
 
     /**
      * 获取第三方返回结果
+     *
      * @param array $requestParams
+     *
      * @return mixed
      * @throws GatewayException
      */
-    public function request(array $requestParams)
+    public function request( array $requestParams )
     {
         try {
-            return $this->requestWXApi(self::METHOD, $requestParams);
-        } catch (GatewayException $e) {
+            return $this->createData( $this->requestWXApi( self::METHOD , $requestParams ) );
+        } catch ( GatewayException $e ) {
             throw $e;
         }
+    }
+
+    /**
+     * 进行二次加签验证
+     *
+     * @param array $params
+     *
+     * @return array
+     */
+    public function createData( array $params )
+    {
+        $values = [
+            'appid'     => $params['appid'] ,
+            'partnerid' => $params['mch_id'] ,
+            'prepayid'  => $params['prepay_id'] ,
+            'package'   => 'Sign=WXPay' ,
+            'noncestr'  => StrUtil::getNonceStr() ,
+            'timestamp' => time() ,
+        ];
+
+        $values = ArrayUtil::removeKeys( $values , [ 'sign' ] );
+
+        $values = ArrayUtil::arraySort( $values );
+
+        $signStr = ArrayUtil::createLinkstring( $values );
+
+        $values['sign'] = $this->makeSign( $signStr );
+
+        return $values;
     }
 
     /**
