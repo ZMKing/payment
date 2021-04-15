@@ -13,6 +13,8 @@ namespace Payment\Gateways\Wechat;
 
 use Payment\Contracts\IGatewayRequest;
 use Payment\Exceptions\GatewayException;
+use Payment\Helpers\ArrayUtil;
+use Payment\Helpers\StrUtil;
 use Payment\Payment;
 
 /**
@@ -36,10 +38,41 @@ class LiteCharge extends WechatBaseObject implements IGatewayRequest
     public function request(array $requestParams)
     {
         try {
-            return $this->requestWXApi(self::METHOD, $requestParams);
+//            return $this->requestWXApi(self::METHOD, $requestParams);
+            return $this->createData( $this->requestWXApi( self::METHOD , $requestParams ) );
+
         } catch (GatewayException $e) {
             throw $e;
         }
+    }
+    /**
+     * 进行二次加签验证
+     * https://pay.weixin.qq.com/wiki/doc/api/wxa/wxa_api.php?chapter=7_7&index=5
+     * 注意大小写
+     * @param array $params
+     *
+     *
+     * @return array
+     */
+    public function createData( array $params )
+    {
+        $values = [
+            'appId'     => $params['appid'] ,
+            'package'   => 'prepay_id='.$params['prepay_id'] ,
+            'nonceStr'  => StrUtil::getNonceStr() ,
+            'timeStamp' => time() ,
+            'signType' => 'MD5' ,
+        ];
+
+        $values = ArrayUtil::removeKeys( $values , [ 'sign' ] );
+
+        $values = ArrayUtil::arraySort( $values );
+
+        $signStr = ArrayUtil::createLinkstring( $values );
+
+        $values['sign'] = $this->makeSign( $signStr );
+
+        return $values;
     }
 
     /**
