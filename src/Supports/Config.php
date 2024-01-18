@@ -40,6 +40,7 @@ class Config implements \ArrayAccess
      * @param null $default
      * @return mixed|null
      */
+    #[\ReturnTypeWillChange]
     public function get($key, $default = null)
     {
         $config = $this->config;
@@ -59,6 +60,7 @@ class Config implements \ArrayAccess
      * @param mixed $offset
      * @return bool
      */
+    #[\ReturnTypeWillChange]
     public function offsetExists($offset)
     {
         return array_key_exists($offset, $this->config);
@@ -68,6 +70,7 @@ class Config implements \ArrayAccess
      * @param mixed $offset
      * @return mixed|null
      */
+    #[\ReturnTypeWillChange]
     public function offsetGet($offset)
     {
         return $this->get($offset);
@@ -77,6 +80,7 @@ class Config implements \ArrayAccess
      * @param mixed $offset
      * @param mixed $value
      */
+    #[\ReturnTypeWillChange]
     public function offsetSet($offset, $value)
     {
         if (isset($this->config[$offset])) {
@@ -87,6 +91,7 @@ class Config implements \ArrayAccess
     /**
      * @param mixed $offset
      */
+    #[\ReturnTypeWillChange]
     public function offsetUnset($offset)
     {
         if (isset($this->config[$offset])) {
