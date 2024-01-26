@@ -1,39 +1,6 @@
 <h1 align="center">Payment使用文档</h1>
 
-
-# JetBrains OS licenses
-
-`payment` had been being developed with PhpStorm under the free JetBrains Open Source license(s) granted by JetBrains s.r.o., hence I would like to express by thanks here.
-
-[![Stargazers over time](./jetbrains-variant-4.svg)](https://www.jetbrains.com/?from=ABC)
-
-
-[![Software license][ico-license]](LICENSE)
-[![Latest development][ico-version-dev]][link-packagist]
-[![Monthly installs][ico-downloads-monthly]][link-downloads]
-
-老版本文档：http://helei112g.github.io/payment
-
-新版本文档如下 (此版本兼容hyperf框架)
-
-
-## Stargazers over time
-
-[![Stargazers over time][starchart-cc]](https://starchart.cc/helei112g/payment)
-
------
-
-# 联系&打赏
-
-[打赏名单](SUPPORT.md)
-
-请大家使用时根据示例代码来，有bug直接提交 `issue`；**提供付费技术支持**。
-
-<div style="margin:0 auto;">
-    <p align="center" style="margin:0px;"><img width="60%" src="https://dayutalk.cn/img/pub-qr.jpeg?v=123"></p>
-    <p align="center" style="margin:0px;"><img width="60%" src="https://dayutalk.cn/img/pay-qr.jpeg"></p>
-</div>
-
+此版本兼容hyperf框架
 
 # 目录
 
@@ -766,15 +733,6 @@ message_key | 交易流水，合作方内部唯一流水 | Y
 - [下载对账单](http://openhome.cmbchina.com/PayNew/pay/doc/cell/QRcode/DownloadRecordedDetails)
 - [查询招行公钥](http://openhome.cmbchina.com/PayNew/pay/doc/cell/QRcode/QueryKeyAPI)
 
-# 贡献指南
-
-## 代码设计
-
-整个代码结构的设计，待补充
-
-## 开发指南
-
-接入一个新的能力该如何操作，待补充
 
 # 第三方文档
 
