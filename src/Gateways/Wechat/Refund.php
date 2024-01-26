@@ -25,7 +25,7 @@ use Payment\Payment;
  **/
 class Refund extends WechatBaseObject implements IGatewayRequest
 {
-    const METHOD = 'secapi/pay/refund';
+    const METHOD = '/v3/refund/domestic/refunds';
 
     /**
      * 获取第三方返回结果
@@ -48,19 +48,27 @@ class Refund extends WechatBaseObject implements IGatewayRequest
      */
     protected function getSelfParams(array $requestParams)
     {
-        $totalFee   = bcmul($requestParams['total_fee'], 100, 0);
-        $refundFee  = bcmul($requestParams['refund_fee'], 100, 0);
         $selfParams = [
-            'transaction_id'  => $requestParams['transaction_id'] ?? '',
-            'out_trade_no'    => $requestParams['trade_no'] ?? '',
-            'out_refund_no'   => $requestParams['refund_no'] ?? '',
-            'total_fee'       => $totalFee,
-            'refund_fee'      => $refundFee,
-            'refund_fee_type' => self::$config->get('fee_type', 'CNY'),
-            'refund_desc'     => $requestParams['refund_desc'] ?? '',
-            'refund_account'  => $requestParams['refund_account'] ?? 'REFUND_SOURCE_RECHARGE_FUNDS', // REFUND_SOURCE_UNSETTLED_FUNDS
-            'notify_url'      => self::$config->get('notify_url', ''),
+            'out_trade_no'     => $requestParams['trade_no'] ?? '',
+            'out_refund_no'    => $requestParams['out_trade_no'] ?? '',
+            'amount'           => [
+                'refund'    => $requestParams['amount'] ? $requestParams['amount'] * 100 : 0,
+                'total'    => $requestParams['total'] ? $requestParams['total'] * 100 : 0,
+                'currency' => 'CNY'
+            ]
         ];
+
+        if (isset($requestParams['notify_url'])) {
+            $selfParams['notify_url'] = $requestParams['notify_url'];
+        }
+
+        if (isset($requestParams['reason'])) {
+            $selfParams['reason'] = $requestParams['reason'];
+        }
+
+        if (isset($requestParams['funds_account'])) {
+            $selfParams['funds_account'] = $requestParams['funds_account'];
+        }
 
         return $selfParams;
     }

@@ -13,9 +13,8 @@ namespace Payment\Gateways\Wechat;
 
 use Payment\Contracts\IGatewayRequest;
 use Payment\Exceptions\GatewayException;
-use Payment\Helpers\ArrayUtil;
-use Payment\Helpers\StrUtil;
-use Payment\Payment;
+use Payment\Gateways\Wechat\Crypto\Rsa;
+use Payment\Gateways\Wechat\Framework\Formatter;
 
 /**
  * @package Payment\Gateways\Wechat
@@ -27,7 +26,7 @@ use Payment\Payment;
  **/
 class LiteCharge extends WechatBaseObject implements IGatewayRequest
 {
-    const METHOD = 'pay/unifiedorder';
+    const METHOD = 'v3/pay/transactions/jsapi';
 
     /**
      * 获取第三方返回结果
@@ -38,7 +37,7 @@ class LiteCharge extends WechatBaseObject implements IGatewayRequest
     public function request(array $requestParams)
     {
         try {
-//            return $this->requestWXApi(self::METHOD, $requestParams);
+
             return $this->createData( $this->requestWXApi( self::METHOD , $requestParams ) );
 
         } catch (GatewayException $e) {
@@ -57,20 +56,19 @@ class LiteCharge extends WechatBaseObject implements IGatewayRequest
     public function createData( array $params )
     {
         $values = [
-            'appId'     => $params['appid'] ,
+            'appId'     => self::$config->get('app_id', ''),
+            'timeStamp' => (string)Formatter::timestamp(),
+            'nonceStr'  => Formatter::nonce(),
             'package'   => 'prepay_id='.$params['prepay_id'] ,
-            'nonceStr'  => StrUtil::getNonceStr() ,
-            'timeStamp' => time() ,
-            'signType' => 'MD5' ,
         ];
 
-        $values = ArrayUtil::removeKeys( $values , [ 'sign' ] );
+        $keyPem = 'file://' . self::$config->get('app_key_pem', '');
 
-        $values = ArrayUtil::arraySort( $values );
-
-        $signStr = ArrayUtil::createLinkstring( $values );
-
-        $values['sign'] = $this->makeSign( $signStr );
+        $privateKey = Rsa::from($keyPem);
+        $values += ['sign' => Rsa::sign(
+            Formatter::joinedByLineFeed(...array_values($values)),
+            $privateKey
+        ), 'signType' => 'RSA'];
 
         return $values;
     }
@@ -78,53 +76,95 @@ class LiteCharge extends WechatBaseObject implements IGatewayRequest
     /**
      * @param array $requestParams
      * @return mixed
+     *
+     *  "attach" : "自定义数据说明",
+        "goods_tag" : "WXG",
+        "support_fapiao" : true,
+        "detail" : {
+            "cost_price" : 608800,
+            "invoice_id" : "微信123",
+            "goods_detail" : [
+                {
+                "merchant_goods_id" : "1246464644",
+                "wechatpay_goods_id" : "1001",
+                "goods_name" : "iPhoneX 256G",
+                "quantity" : 1,
+                "unit_price" : 528800
+                }
+            ]
+        },
+        "scene_info" : {
+            "payer_client_ip" : "14.23.150.211",
+            "device_id" : "013467007045764",
+            "store_info" : {
+                "id" : "0001",
+                "name" : "腾讯大厦分店",
+                "area_code" : "440305",
+                "address" : "广东省深圳市南山区科技中一道10000号"
+            }
+        },
+        "settle_info" : {
+            "profit_sharing" : false
+        }
      */
     protected function getSelfParams(array $requestParams)
     {
-        $limitPay = self::$config->get('limit_pay', '');
-        if ($limitPay) {
-            $limitPay = $limitPay[0];
-        } else {
-            $limitPay = '';
-        }
-        $nowTime    = time();
         $timeExpire = intval($requestParams['time_expire']);
         if (!empty($timeExpire)) {
-            $timeExpire = date('YmdHis', $timeExpire);
-        } else {
-            $timeExpire = date('YmdHis', $nowTime + 1800); // 默认半小时过期
-        }
 
-        $receipt   = $requestParams['receipt'] ?? false;
-        $totalFee  = bcmul($requestParams['amount'], 100, 0);
-        $sceneInfo = $requestParams['scene_info'] ?? '';
-        if ($sceneInfo) {
-            $sceneInfo = json_encode(['store_info' => $sceneInfo]);
+            $timestamp = $requestParams['time_expire'];
+            $date = new \DateTime("@$timestamp");
+            $timeExpire = $date->format("Y-m-d\TH:i:sP");
         } else {
-            $sceneInfo = '';
-        }
 
+            $timestamp = time() + 1800;
+            $date = new \DateTime("@$timestamp");
+            $timeExpire = $date->format("Y-m-d\TH:i:sP");
+        }
 
         $selfParams = [
-            'device_info'      => $requestParams['device_info'] ?? '',
-            'body'             => $requestParams['subject'] ?? '',
-            'detail'           => $requestParams['body'] ?? '',
-            'attach'           => $requestParams['return_param'] ?? '',
             'out_trade_no'     => $requestParams['trade_no'] ?? '',
-            'fee_type'         => self::$config->get('fee_type', 'CNY'),
-            'total_fee'        => $totalFee,
-            'spbill_create_ip' => $requestParams['client_ip'] ?? '',
-            'time_start'       => date('YmdHis', $nowTime),
+            'description'      => $requestParams['body'] ?? '',
+            'appid'      => self::$config->get('app_id', ''),
+            'mchid'     => self::$config->get('mch_id', ''),
+            'notify_url' => self::$config->get('notify_url', ''),
             'time_expire'      => $timeExpire,
-            'goods_tag'        => $requestParams['goods_tag'] ?? '',
-            'notify_url'       => self::$config->get('notify_url', ''),
-            'trade_type'       => 'JSAPI',
-            'product_id'       => $requestParams['product_id'] ?? '',
-            'limit_pay'        => $limitPay,
-            'openid'           => $requestParams['openid'] ?? '',
-            'receipt'          => $receipt === true ? 'Y' : '',
-            'scene_info'       => $sceneInfo,
+            'amount'           => [
+                'total'    => $requestParams['amount'] ? $requestParams['amount'] * 100 : 0,
+                'currency' => 'CNY'
+            ],
+            'payer' => [
+              'openid' => $requestParams['openid'] ?? '',
+            ]
         ];
+
+        if (isset($requestParams['settle_info'])) {
+            $selfParams['settle_info'] = $requestParams['settle_info'];
+        }
+
+        if (isset($requestParams['scene_info'])) {
+            $selfParams['scene_info'] = $requestParams['scene_info'];
+        }
+
+        if (isset($requestParams['detail'])) {
+            $selfParams['detail'] = $requestParams['detail'];
+        }
+
+        if (isset($requestParams['support_fapiao'])) {
+            $selfParams['support_fapiao'] = $requestParams['support_fapiao'];
+        }
+
+        if (isset($requestParams['support_fapiao'])) {
+            $selfParams['support_fapiao'] = $requestParams['support_fapiao'];
+        }
+
+        if (isset($requestParams['goods_tag'])) {
+            $selfParams['goods_tag'] = $requestParams['goods_tag'];
+        }
+
+        if (isset($requestParams['attach'])) {
+            $selfParams['attach'] = $requestParams['attach'];
+        }
 
         return $selfParams;
     }

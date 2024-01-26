@@ -20,6 +20,7 @@ use Payment\Contracts\ITransferProxy;
 use Payment\Exceptions\GatewayException;
 use Payment\Gateways\Wechat\Bill;
 use Payment\Gateways\Wechat\CancelTrade;
+use Payment\Gateways\Wechat\CertList;
 use Payment\Gateways\Wechat\CloseTrade;
 use Payment\Gateways\Wechat\Notify;
 use Payment\Gateways\Wechat\Refund;
@@ -253,6 +254,22 @@ class WechatProxy extends BaseObject implements IPayProxy, IQueryProxy, ITransfe
             }
 
             return $trf->request($requestParams);
+        } catch (GatewayException $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * 证书列表查询
+     * @param array $requestParams
+     * @return mixed
+     * @throws GatewayException
+     */
+    public function certList(array $requestParams)
+    {
+        try {
+            $trade = new CertList();
+            return $trade->request($requestParams);
         } catch (GatewayException $e) {
             throw $e;
         }

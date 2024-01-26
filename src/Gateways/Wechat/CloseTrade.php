@@ -25,7 +25,7 @@ use Payment\Payment;
  **/
 class CloseTrade extends WechatBaseObject implements IGatewayRequest
 {
-    const METHOD = 'pay/closeorder';
+    const METHOD = '/v3/pay/transactions/out-trade-no/{out_trade_no}/close';
 
     /**
      * 获取第三方返回结果
@@ -36,7 +36,10 @@ class CloseTrade extends WechatBaseObject implements IGatewayRequest
     public function request(array $requestParams)
     {
         try {
-            return $this->requestWXApi(self::METHOD, $requestParams);
+
+            $queryUrl = str_replace('{out_trade_no}', $requestParams['out_trade_no'], self::METHOD);
+
+            return $this->requestGetWXApi($queryUrl);
         } catch (GatewayException $e) {
             throw $e;
         }
@@ -48,10 +51,7 @@ class CloseTrade extends WechatBaseObject implements IGatewayRequest
      */
     protected function getSelfParams(array $requestParams)
     {
-        $selfParams = [
-            'out_trade_no' => $requestParams['trade_no'] ?? '',
-        ];
 
-        return $selfParams;
+        return [];
     }
 }

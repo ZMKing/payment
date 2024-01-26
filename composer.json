@@ -13,15 +13,19 @@
         }
     ],
     "require": {
-        "php": ">=7.0",
+        "php": ">=7.1",
         "ext-bcmath": "*",
         "ext-mbstring": "*",
         "ext-json": "*",
         "ext-simplexml": "*",
         "ext-xml": "*",
         "ext-openssl": "*",
-        "guzzlehttp/guzzle": "~7.0"
+        "guzzlehttp/guzzle": "~7.0",
+        "guzzlehttp/uri-template": "^1.0"
     },
+    "bin": [
+        "bin/CertificateDownloader.php"
+    ],
     "require-dev": {
         "codeception/codeception": "*"
     },

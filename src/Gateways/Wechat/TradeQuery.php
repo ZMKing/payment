@@ -13,19 +13,14 @@ namespace Payment\Gateways\Wechat;
 
 use Payment\Contracts\IGatewayRequest;
 use Payment\Exceptions\GatewayException;
-use Payment\Payment;
 
 /**
- * @package Payment\Gateways\Wechat
- * @author  : Leo
- * @email   : dayugog@gmail.com
- * @date    : 2019/4/1 8:27 PM
  * @version : 1.0.0
  * @desc    : 该接口提供所有微信支付订单的查询
  **/
 class TradeQuery extends WechatBaseObject implements IGatewayRequest
 {
-    const METHOD = 'pay/orderquery';
+    const METHOD = '/v3/pay/transactions/id/';
 
     /**
      * 获取第三方返回结果
@@ -36,7 +31,9 @@ class TradeQuery extends WechatBaseObject implements IGatewayRequest
     public function request(array $requestParams)
     {
         try {
-            return $this->requestWXApi(self::METHOD, $requestParams);
+
+            $queryUrl = self::METHOD . $requestParams['transaction_id'] . '?mchid= '. self::$config->get('mch_id', '');
+            return $this->requestGetWXApi($queryUrl);
         } catch (GatewayException $e) {
             throw $e;
         }
@@ -49,8 +46,7 @@ class TradeQuery extends WechatBaseObject implements IGatewayRequest
     protected function getSelfParams(array $requestParams)
     {
         $selfParams = [
-            'transaction_id' => $requestParams['transaction_id'] ?? '',
-            'out_trade_no'   => $requestParams['trade_no'] ?? '',
+
         ];
 
         return $selfParams;
