@@ -23,13 +23,16 @@
         "guzzlehttp/guzzle": "~7.0",
         "guzzlehttp/uri-template": "^1.0"
     },
-    "bin": [
-        "bin/CertificateDownloader.php"
-    ],
     "require-dev": {
         "codeception/codeception": "*"
     },
     "autoload": {
         "psr-4": {"Payment\\": "src/"}
+    },
+    "bin": [
+        "bin/CertificateDownloader.php"
+    ],
+    "scripts": {
+        "v3-certificates": "bin/CertificateDownloader.php"
     }
 }
