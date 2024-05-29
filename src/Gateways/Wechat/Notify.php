@@ -26,22 +26,34 @@ class Notify extends WechatBaseObject
     /**
      * @throws GatewayException
      */
-    public function request()
+    public function request($requestParams = [])
     {
-        $request = \Hyperf\Utils\ApplicationContext::getContainer()->get(\Hyperf\HttpServer\Contract\RequestInterface::class);
+        $returnArr = [];
+        if (count($requestParams) > 0) {
+            $returnArr = $requestParams['inBody'];
 
-        $inBody = $request->getBody()->getContents();
+            $inWechatpayNonce = $requestParams['headers']['wechatpay-nonce'];
+            $inWechatpaySerial = $requestParams['headers']['wechatpay-serial'];
+            $inWechatpaySignature = $requestParams['headers']['wechatpay-signature'];
+            $inWechatpayTimestamp = $requestParams['headers']['wechatpay-timestamp'];
+        }else{
+            $request = \Hyperf\Utils\ApplicationContext::getContainer()->get(\Hyperf\HttpServer\Contract\RequestInterface::class);
 
-        if (empty($inBody)) {
-            throw new GatewayException('the notify data is empty', Payment::NOTIFY_DATA_EMPTY);
+            $inBody = $request->getBody()->getContents();
+
+            if (empty($inBody)) {
+                throw new GatewayException('the notify data is empty', Payment::NOTIFY_DATA_EMPTY);
+            }
+
+            $returnArr = (array)json_decode($inBody, true);
+
+            $inWechatpayNonce = $request->getHeaderLine('wechatpay-nonce');
+            $inWechatpaySerial = $request->getHeaderLine('wechatpay-serial');
+            $inWechatpaySignature = $request->getHeaderLine('wechatpay-signature');
+            $inWechatpayTimestamp = $request->getHeaderLine('wechatpay-timestamp');
         }
 
-        $inWechatpayNonce = $request->getHeaderLine('wechatpay-nonce');
-        $inWechatpaySerial = $request->getHeaderLine('wechatpay-serial');
-        $inWechatpaySignature = $request->getHeaderLine('wechatpay-signature');
-        $inWechatpayTimestamp = $request->getHeaderLine('wechatpay-timestamp');
 
-        $returnArr = [];
 
         $apiv3Key = self::$config->get('mch_api_v3_key', '');
 
@@ -54,10 +66,10 @@ class Notify extends WechatBaseObject
             throw new GatewayException('check notify timestamp failed', Payment::GATEWAY_CHECK_FAILED);
         }
 
-        $returnArr = (array)json_decode($inBody, true);
+
         $verifiedStatus = Rsa::verify(
             // 构造验签名串
-            Formatter::joinedByLineFeed($inWechatpayTimestamp, $inWechatpayNonce, $inBody),
+            Formatter::joinedByLineFeed($inWechatpayTimestamp, $inWechatpayNonce, json_encode($returnArr)),
             $inWechatpaySignature,
             $platformPublicKeyInstance
         );

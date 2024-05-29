@@ -102,11 +102,11 @@ class WechatProxy extends BaseObject implements IPayProxy, IQueryProxy, ITransfe
      * @return mixed
      * @throws GatewayException
      */
-    public function notify(IPayNotify $callback)
+    public function notify(IPayNotify $callback, array $requestParams = [])
     {
         try {
             $n    = new Notify();
-            $data = $n->request(); // 获取数据
+            $data = $n->request($requestParams); // 获取数据
         } catch (GatewayException $e) {
             throw $e;
         }

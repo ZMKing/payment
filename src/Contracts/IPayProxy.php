@@ -40,9 +40,19 @@ interface IPayProxy
     /**
      * 异步通知
      * @param IPayNotify $callback
+     * @param array $requestParams
+     *              [
+     *                 'inBody' = [],
+     *                 'headers' [
+     *                      'wechatpay-nonce' => 'wechatpay-nonce',
+     *                      'wechatpay-nonce' => 'wechatpay-serial',
+     *                      'wechatpay-nonce' => 'wechatpay-signature',
+     *                      'wechatpay-nonce' => 'wechatpay-timestamp',
+     *                  ]
+     *              ]
      * @return mixed
      */
-    public function notify(IPayNotify $callback);
+    public function notify(IPayNotify $callback, array $requestParams = []);
 
     /**
      * 取消交易
