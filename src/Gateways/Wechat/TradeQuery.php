@@ -32,7 +32,7 @@ class TradeQuery extends WechatBaseObject implements IGatewayRequest
     {
         try {
 
-            $queryUrl = self::METHOD . $requestParams['transaction_id'] . '?mchid= '. self::$config->get('mch_id', '');
+            $queryUrl = self::METHOD . $requestParams['transaction_id'] . '?mchid='. self::$config->get('mch_id', '');
             return $this->requestGetWXApi($queryUrl);
         } catch (GatewayException $e) {
             throw $e;
