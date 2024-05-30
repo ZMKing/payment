@@ -114,6 +114,10 @@ class WechatProxy extends BaseObject implements IPayProxy, IQueryProxy, ITransfe
         // 异步 async，同步 sync
         $flag = $callback->handle('Wechat', $data['notify_type'], 'async', $data['notify_data']);
 
+        if(is_array($flag) && count($flag) > 0) {
+
+            return $flag;
+        }
         return $n->response($flag);
     }
 

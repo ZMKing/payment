@@ -30,8 +30,8 @@ class Notify extends WechatBaseObject
     {
         $returnArr = [];
         if (count($requestParams) > 0) {
-            $returnArr = $requestParams['inBody'];
-
+            $inBody = $requestParams['inBody'];
+            $returnArr = (array)json_decode($inBody, true);
             $inWechatpayNonce = $requestParams['headers']['wechatpay-nonce'];
             $inWechatpaySerial = $requestParams['headers']['wechatpay-serial'];
             $inWechatpaySignature = $requestParams['headers']['wechatpay-signature'];
@@ -53,8 +53,6 @@ class Notify extends WechatBaseObject
             $inWechatpayTimestamp = $request->getHeaderLine('wechatpay-timestamp');
         }
 
-
-
         $apiv3Key = self::$config->get('mch_api_v3_key', '');
 
         $platformPublicKeyInstance = Rsa::from('file://' . self::$config->get('app_cert_pem', ''), Rsa::KEY_TYPE_PUBLIC);
@@ -66,10 +64,9 @@ class Notify extends WechatBaseObject
             throw new GatewayException('check notify timestamp failed', Payment::GATEWAY_CHECK_FAILED);
         }
 
-
         $verifiedStatus = Rsa::verify(
             // 构造验签名串
-            Formatter::joinedByLineFeed($inWechatpayTimestamp, $inWechatpayNonce, json_encode($returnArr)),
+            Formatter::joinedByLineFeed($inWechatpayTimestamp, $inWechatpayNonce, $inBody),
             $inWechatpaySignature,
             $platformPublicKeyInstance
         );
