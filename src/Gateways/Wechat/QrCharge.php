@@ -13,6 +13,8 @@ namespace Payment\Gateways\Wechat;
 
 use Payment\Contracts\IGatewayRequest;
 use Payment\Exceptions\GatewayException;
+use Payment\Gateways\Wechat\Crypto\Rsa;
+use Payment\Gateways\Wechat\Framework\Formatter;
 
 /**
  * @version : 1.0.0
@@ -31,10 +33,39 @@ class QrCharge extends WechatBaseObject implements IGatewayRequest
     public function request(array $requestParams)
     {
         try {
-            return $this->requestWXApi(self::METHOD, $requestParams);
+            return $this->createData( $this->requestWXApi(self::METHOD, $requestParams) );
         } catch (GatewayException $e) {
             throw $e;
         }
+    }
+
+    /**
+     * 进行二次加签验证
+     * https://pay.weixin.qq.com/wiki/doc/api/wxa/wxa_api.php?chapter=7_7&index=5
+     * 注意大小写
+     * @param array $params
+     *
+     *
+     * @return array
+     */
+    public function createData( array $params )
+    {
+        $values = [
+            'appId'     => self::$config->get('app_id', ''),
+            'timeStamp' => (string)Formatter::timestamp(),
+            'nonceStr'  => Formatter::nonce(),
+            'package'   => 'prepay_id='.$params['prepay_id'] ,
+        ];
+
+        $keyPem = 'file://' . self::$config->get('app_key_pem', '');
+
+        $privateKey = Rsa::from($keyPem);
+        $values += ['sign' => Rsa::sign(
+            Formatter::joinedByLineFeed(...array_values($values)),
+            $privateKey
+        ), 'signType' => 'RSA'];
+
+        return $values;
     }
 
     /**
@@ -64,7 +95,7 @@ class QrCharge extends WechatBaseObject implements IGatewayRequest
             'notify_url'       => self::$config->get('notify_url', ''),
             'time_expire'      => $timeExpire,
             'amount'           => [
-                'total'    => $requestParams['amount'] ? $requestParams['amount'] * 100 : 0,
+                'total'    => intval(round(($requestParams['amount'] ? $requestParams['amount'] * 100 : 0))),
                 'currency' => 'CNY'
             ]
         ];

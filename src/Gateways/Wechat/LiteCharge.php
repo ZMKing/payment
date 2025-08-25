@@ -130,7 +130,7 @@ class LiteCharge extends WechatBaseObject implements IGatewayRequest
             'notify_url' => self::$config->get('notify_url', ''),
             'time_expire'      => $timeExpire,
             'amount'           => [
-                'total'    => $requestParams['amount'] ? $requestParams['amount'] * 100 : 0,
+                'total'    => intval(round(($requestParams['amount'] ? $requestParams['amount'] * 100 : 0))),
                 'currency' => 'CNY'
             ],
             'payer' => [
